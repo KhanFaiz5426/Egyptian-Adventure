@@ -13,10 +13,10 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
     Image topObeliskImg;
     Image bottomObeliskImg;
 
-    int falconX = boardWidth/8;
-    int falconY = boardWidth/2;
-    int falconWidth = 34;
-    int falconHeight = 24;
+    int falconX = boardWidth / 8;
+    int falconY = boardWidth / 2;
+    int falconWidth = 50;
+    int falconHeight = 50;
 
     class Falcon {
         int x = falconX;
@@ -34,7 +34,7 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
     int obeliskY = 0;
     int obeliskWidth = 64;
     int obeliskHeight = 512;
-    
+
     class Obelisk {
         int x = obeliskX;
         int y = obeliskY;
@@ -52,6 +52,7 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
     int velocityX = -4;
     int velocityY = 0;
     int gravity = 1;
+    int minGap = falconHeight * 2;
 
     ArrayList<Obelisk> obelisks;
     Random random = new Random();
@@ -72,68 +73,72 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
         bottomObeliskImg = new ImageIcon(getClass().getResource("./obelisk.png")).getImage();
 
         falcon = new Falcon(falconImg);
-        obelisks = new ArrayList<Obelisk>();
+        obelisks = new ArrayList<>();
 
         placeObeliskTimer = new Timer(1500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-              placeObelisks();
+                placeObelisks();
             }
         });
         placeObeliskTimer.start();
-        
-		gameLoop = new Timer(1000/60, this); 
+
+        gameLoop = new Timer(1000 / 60, this);
         gameLoop.start();
-	}
-    
+    }
+
     void placeObelisks() {
-        int randomObeliskY = (int) (obeliskY - obeliskHeight/4 - Math.random()*(obeliskHeight/2));
-        int openingSpace = boardHeight/4;
-    
+        int maxOpening = Math.max(minGap, boardHeight / 3 - (int)(score / 5) * 5);
+        int randomObeliskY = obeliskY - obeliskHeight / 4 - random.nextInt(obeliskHeight / 2);
+        int openingSpace = Math.max(minGap, maxOpening);
+        int horizontalOffset = random.nextInt(20) - 10;
+
         Obelisk topObelisk = new Obelisk(topObeliskImg);
         topObelisk.y = randomObeliskY;
+        topObelisk.x += horizontalOffset;
         obelisks.add(topObelisk);
-    
+
         Obelisk bottomObelisk = new Obelisk(bottomObeliskImg);
-        bottomObelisk.y = topObelisk.y  + obeliskHeight + openingSpace;
+        bottomObelisk.y = topObelisk.y + obeliskHeight + openingSpace;
+        bottomObelisk.x += horizontalOffset;
         obelisks.add(bottomObelisk);
     }
-    
-    
-    public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		draw(g);
-	}
 
-	public void draw(Graphics g) {
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        draw(g);
+    }
+
+    public void draw(Graphics g) {
         g.drawImage(backgroundImg, 0, 0, this.boardWidth, this.boardHeight, null);
 
         g.drawImage(falconImg, falcon.x, falcon.y, falcon.width, falcon.height, null);
 
-        for (int i = 0; i < obelisks.size(); i++) {
-            Obelisk obelisk = obelisks.get(i);
+        for (Obelisk obelisk : obelisks) {
             g.drawImage(obelisk.img, obelisk.x, obelisk.y, obelisk.width, obelisk.height, null);
         }
 
         g.setColor(Color.white);
-
         g.setFont(new Font("Arial", Font.PLAIN, 32));
+
         if (gameOver) {
-            g.drawString("Game Over: " + String.valueOf((int) score), 10, 35);
-        }
-        else {
+            g.drawString("Game Over: " + (int) score, 10, 35);
+        } else {
             g.drawString(String.valueOf((int) score), 10, 35);
         }
-        
-	}
+    }
 
     public void move() {
         velocityY += gravity;
         falcon.y += velocityY;
         falcon.y = Math.max(falcon.y, 0);
 
-        for (int i = 0; i < obelisks.size(); i++) {
-            Obelisk obelisk = obelisks.get(i);
+        // speed increase
+        if (score % 5 == 0 && score > 0) {
+            velocityX = -4 - (int) (score / 5);
+        }
+
+        for (Obelisk obelisk : obelisks) {
             obelisk.x += velocityX;
 
             if (!obelisk.passed && falcon.x > obelisk.x + obelisk.width) {
@@ -146,6 +151,8 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
             }
         }
 
+        obelisks.removeIf(obelisk -> obelisk.x + obelisk.width < 0);
+
         if (falcon.y > boardHeight) {
             gameOver = true;
         }
@@ -153,9 +160,9 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
 
     boolean collision(Falcon a, Obelisk b) {
         return a.x < b.x + b.width &&
-               a.x + a.width > b.x &&
-               a.y < b.y + b.height &&
-               a.y + a.height > b.y;
+                a.x + a.width > b.x &&
+                a.y < b.y + b.height &&
+                a.y + a.height > b.y;
     }
 
     @Override
@@ -166,7 +173,7 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
             placeObeliskTimer.stop();
             gameLoop.stop();
         }
-    }  
+    }
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -174,15 +181,20 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
             velocityY = -9;
 
             if (gameOver) {
-                falcon.y = falconY;
-                velocityY = 0;
-                obelisks.clear();
-                gameOver = false;
-                score = 0;
-                gameLoop.start();
-                placeObeliskTimer.start();
+                resetGame();
             }
         }
+    }
+
+    private void resetGame() {
+        falcon.y = falconY;
+        velocityY = 0;
+        obelisks.clear();
+        gameOver = false;
+        score = 0;
+        velocityX = -4;
+        gameLoop.start();
+        placeObeliskTimer.start();
     }
 
     @Override

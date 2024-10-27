@@ -1,21 +1,20 @@
 import javax.swing.*;
 
 public class App {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         int boardWidth = 360;
         int boardHeight = 640;
 
         JFrame frame = new JFrame("Egyptian Adventure");
-        // frame.setVisible(true);
-		frame.setSize(boardWidth, boardHeight);
+        frame.setSize(boardWidth, boardHeight);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        EgyptianAdventure flappyBird = new EgyptianAdventure();
-        frame.add(flappyBird);
+        EgyptianAdventure egyptianAdventure = new EgyptianAdventure();
+        frame.add(egyptianAdventure);
         frame.pack();
-        flappyBird.requestFocus();
+        egyptianAdventure.requestFocus();
         frame.setVisible(true);
     }
 }

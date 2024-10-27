@@ -8,108 +8,95 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
     int boardWidth = 360;
     int boardHeight = 640;
 
-    //images
     Image backgroundImg;
-    Image birdImg;
-    Image topPipeImg;
-    Image bottomPipeImg;
+    Image falconImg;
+    Image topObeliskImg;
+    Image bottomObeliskImg;
 
-    //bird class
-    int birdX = boardWidth/8;
-    int birdY = boardWidth/2;
-    int birdWidth = 34;
-    int birdHeight = 24;
+    int falconX = boardWidth/8;
+    int falconY = boardWidth/2;
+    int falconWidth = 34;
+    int falconHeight = 24;
 
-    class Bird {
-        int x = birdX;
-        int y = birdY;
-        int width = birdWidth;
-        int height = birdHeight;
+    class Falcon {
+        int x = falconX;
+        int y = falconY;
+        int width = falconWidth;
+        int height = falconHeight;
         Image img;
 
-        Bird(Image img) {
+        Falcon(Image img) {
             this.img = img;
         }
     }
 
-    //pipe class
-    int pipeX = boardWidth;
-    int pipeY = 0;
-    int pipeWidth = 64;  //scaled by 1/6
-    int pipeHeight = 512;
+    int obeliskX = boardWidth;
+    int obeliskY = 0;
+    int obeliskWidth = 64;
+    int obeliskHeight = 512;
     
-    class Pipe {
-        int x = pipeX;
-        int y = pipeY;
-        int width = pipeWidth;
-        int height = pipeHeight;
+    class Obelisk {
+        int x = obeliskX;
+        int y = obeliskY;
+        int width = obeliskWidth;
+        int height = obeliskHeight;
         Image img;
         boolean passed = false;
 
-        Pipe(Image img) {
+        Obelisk(Image img) {
             this.img = img;
         }
     }
 
-    //game logic
-    Bird bird;
-    int velocityX = -4; //move pipes to the left speed (simulates bird moving right)
-    int velocityY = 0; //move bird up/down speed.
+    Falcon falcon;
+    int velocityX = -4;
+    int velocityY = 0;
     int gravity = 1;
 
-    ArrayList<Pipe> pipes;
+    ArrayList<Obelisk> obelisks;
     Random random = new Random();
 
     Timer gameLoop;
-    Timer placePipeTimer;
+    Timer placeObeliskTimer;
     boolean gameOver = false;
     double score = 0;
 
     EgyptianAdventure() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
-        // setBackground(Color.blue);
         setFocusable(true);
         addKeyListener(this);
 
-        //load images
-        backgroundImg = new ImageIcon(getClass().getResource("./flappybirdbg.png")).getImage();
-        birdImg = new ImageIcon(getClass().getResource("./flappybird.png")).getImage();
-        topPipeImg = new ImageIcon(getClass().getResource("./toppipe.png")).getImage();
-        bottomPipeImg = new ImageIcon(getClass().getResource("./bottompipe.png")).getImage();
+        backgroundImg = new ImageIcon(getClass().getResource("./background.png")).getImage();
+        falconImg = new ImageIcon(getClass().getResource("./falcon.png")).getImage();
+        topObeliskImg = new ImageIcon(getClass().getResource("./upsideDownObelisk.png")).getImage();
+        bottomObeliskImg = new ImageIcon(getClass().getResource("./obelisk.png")).getImage();
 
-        //bird
-        bird = new Bird(birdImg);
-        pipes = new ArrayList<Pipe>();
+        falcon = new Falcon(falconImg);
+        obelisks = new ArrayList<Obelisk>();
 
-        //place pipes timer
-        placePipeTimer = new Timer(1500, new ActionListener() {
+        placeObeliskTimer = new Timer(1500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-              // Code to be executed
-              placePipes();
+              placeObelisks();
             }
         });
-        placePipeTimer.start();
+        placeObeliskTimer.start();
         
-		//game timer
-		gameLoop = new Timer(1000/60, this); //how long it takes to start timer, milliseconds gone between frames 
+		gameLoop = new Timer(1000/60, this); 
         gameLoop.start();
 	}
     
-    void placePipes() {
-        //(0-1) * pipeHeight/2.
-        // 0 -> -128 (pipeHeight/4)
-        // 1 -> -128 - 256 (pipeHeight/4 - pipeHeight/2) = -3/4 pipeHeight
-        int randomPipeY = (int) (pipeY - pipeHeight/4 - Math.random()*(pipeHeight/2));
+    void placeObelisks() {
+        int randomObeliskY = (int) (obeliskY - obeliskHeight/4 - Math.random()*(obeliskHeight/2));
         int openingSpace = boardHeight/4;
     
-        Pipe topPipe = new Pipe(topPipeImg);
-        topPipe.y = randomPipeY;
-        pipes.add(topPipe);
+        Obelisk topObelisk = new Obelisk(topObeliskImg);
+        topObelisk.y = randomObeliskY;
+        obelisks.add(topObelisk);
     
-        Pipe bottomPipe = new Pipe(bottomPipeImg);
-        bottomPipe.y = topPipe.y  + pipeHeight + openingSpace;
-        pipes.add(bottomPipe);
+        Obelisk bottomObelisk = new Obelisk(bottomObeliskImg);
+        bottomObelisk.y = topObelisk.y  + obeliskHeight + openingSpace;
+        obelisks.add(bottomObelisk);
     }
     
     
@@ -119,19 +106,15 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
 	}
 
 	public void draw(Graphics g) {
-        //background
         g.drawImage(backgroundImg, 0, 0, this.boardWidth, this.boardHeight, null);
 
-        //bird
-        g.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height, null);
+        g.drawImage(falconImg, falcon.x, falcon.y, falcon.width, falcon.height, null);
 
-        //pipes
-        for (int i = 0; i < pipes.size(); i++) {
-            Pipe pipe = pipes.get(i);
-            g.drawImage(pipe.img, pipe.x, pipe.y, pipe.width, pipe.height, null);
+        for (int i = 0; i < obelisks.size(); i++) {
+            Obelisk obelisk = obelisks.get(i);
+            g.drawImage(obelisk.img, obelisk.x, obelisk.y, obelisk.width, obelisk.height, null);
         }
 
-        //score
         g.setColor(Color.white);
 
         g.setFont(new Font("Arial", Font.PLAIN, 32));
@@ -145,44 +128,42 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
 	}
 
     public void move() {
-        //bird
         velocityY += gravity;
-        bird.y += velocityY;
-        bird.y = Math.max(bird.y, 0); //apply gravity to current bird.y, limit the bird.y to top of the canvas
+        falcon.y += velocityY;
+        falcon.y = Math.max(falcon.y, 0);
 
-        //pipes
-        for (int i = 0; i < pipes.size(); i++) {
-            Pipe pipe = pipes.get(i);
-            pipe.x += velocityX;
+        for (int i = 0; i < obelisks.size(); i++) {
+            Obelisk obelisk = obelisks.get(i);
+            obelisk.x += velocityX;
 
-            if (!pipe.passed && bird.x > pipe.x + pipe.width) {
-                score += 0.5; //0.5 because there are 2 pipes! so 0.5*2 = 1, 1 for each set of pipes
-                pipe.passed = true;
+            if (!obelisk.passed && falcon.x > obelisk.x + obelisk.width) {
+                score += 0.5;
+                obelisk.passed = true;
             }
 
-            if (collision(bird, pipe)) {
+            if (collision(falcon, obelisk)) {
                 gameOver = true;
             }
         }
 
-        if (bird.y > boardHeight) {
+        if (falcon.y > boardHeight) {
             gameOver = true;
         }
     }
 
-    boolean collision(Bird a, Pipe b) {
-        return a.x < b.x + b.width &&   //a's top left corner doesn't reach b's top right corner
-               a.x + a.width > b.x &&   //a's top right corner passes b's top left corner
-               a.y < b.y + b.height &&  //a's top left corner doesn't reach b's bottom left corner
-               a.y + a.height > b.y;    //a's bottom left corner passes b's top left corner
+    boolean collision(Falcon a, Obelisk b) {
+        return a.x < b.x + b.width &&
+               a.x + a.width > b.x &&
+               a.y < b.y + b.height &&
+               a.y + a.height > b.y;
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) { //called every x milliseconds by gameLoop timer
+    public void actionPerformed(ActionEvent e) {
         move();
         repaint();
         if (gameOver) {
-            placePipeTimer.stop();
+            placeObeliskTimer.stop();
             gameLoop.stop();
         }
     }  
@@ -190,23 +171,20 @@ public class EgyptianAdventure extends JPanel implements ActionListener, KeyList
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            // System.out.println("JUMP!");
             velocityY = -9;
 
             if (gameOver) {
-                //restart game by resetting conditions
-                bird.y = birdY;
+                falcon.y = falconY;
                 velocityY = 0;
-                pipes.clear();
+                obelisks.clear();
                 gameOver = false;
                 score = 0;
                 gameLoop.start();
-                placePipeTimer.start();
+                placeObeliskTimer.start();
             }
         }
     }
 
-    //not needed
     @Override
     public void keyTyped(KeyEvent e) {}
 
